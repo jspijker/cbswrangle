@@ -1,0 +1,116 @@
+---
+title: "cbswrangle"
+author: "Job Spijker"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cbswrangle}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The cbswrangle package contains a few helper functions to make
+working with the cbsodataR package a little easier.
+
+
+## cbsodataR
+
+This package is an addition on the *cbsodataR* package. The
+*cbsodataR* package allows for retrieving data from 
+[Statistics Netherlands (CBS)](http://www.cbs.nl), which produces all official statistics of the Netherlands. 
+
+More information about cbsodataR can be found in the accompanying
+vignette of the package. use the following command to retrieve the
+vignette:
+
+```{r, eval=FALSE}
+vignette("cbsodataR")
+```
+
+## Table of contents
+
+The available tables at CBS are stored in a table of contents, the
+_TOC_
+
+The TOC must be downloaded before any other table can be downloaded.
+Downloaded data is stored in the directory 'data', to separate data
+and code. The datafile package takes care of this.
+
+```{r}
+
+library(here)
+library(cbsodataR)
+library(cbswrangle)
+library(dplyr)
+
+# install with remotes::install_github("jspijker/datafile")
+library(datafile)
+datafileInit(basedir=tempdir())
+
+cbstoc <- getcbstoc(fname=datafile("cbstoc.rds"))
+
+```
+
+# downloading a table
+
+Each table at CBS has an identifier. These identifiers can be found in
+the TOC. 
+
+```{r}
+cbstoc %>% 
+  select(Identifier, ShortTitle) 
+
+```
+
+With `getcbs` one can download a table.  
+This function downloads the data and the meta data from a CBS table and
+stores it to disk. It checks if the table exists using the TOC and then
+checks if the file already exists on disk. If not, the data is downloaded. If
+the file is already present, then the data is read from the file.
+
+After downloading, the fieldnames of the data are renamed and the
+unit of the field is added to the fieldname. A translation table is
+created with the original fieldname and the fieldname created by
+this function.
+
+The code below downloads the agriculture statistics (Dutch:
+landbouwtellingen) and stores the result in
+_./data/cbs\_landbouwtelling.rds_
+
+
+```{r}
+
+landbouwtelling <- getcbs("80781ned",datafile("cbs_landbouwtelling.rds"))
+print(names(landbouwtelling))
+```
+
+
+The `getcbs` function returns A list with several objects: data contains
+the data.frame with data, meta contains the meta data, tocentry contains
+the meta data from the TOC, keyName is the translation table, and
+fieldnames is a table with filednames and grouping id's.
+
+CBS fieldnames folow a certain hierarchilcal grouping order. For
+example in the data about agriculture you find the groups farms and
+animals. In each group there is the variable pigs\_amount
+(varkens\_aantallen). In the farm group this is refering to the
+amount of farms with pigs, in the animal group this is refering to
+the amount of pigs. From the fieldname it's not clear to which
+group the field belongs, use the function `getFieldParents. to
+get this information.
+
+
+```{r}
+
+fieldn <- "Leghennen_aantal.1"
+getFieldParents(fieldn,landbouwtelling)
+
+```
+

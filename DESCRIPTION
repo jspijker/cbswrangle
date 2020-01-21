@@ -1,0 +1,13 @@
+Package: cbswrangle
+Type: Package
+Title: helper functions for cbsodataR
+Version: 1.0
+Date: 2018-11-29
+Authors@R: c(person("Job","Spijker",email="job.spijker@rivm.nl",
+        role = c("aut", "cre")))
+Description: Helper functions for cbsodataR package
+License: tbd
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 7.0.2
